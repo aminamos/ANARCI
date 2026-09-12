@@ -1,0 +1,25 @@
+name: Build & Test
+
+on:
+  push:
+  pull_request:
+  schedule:
+  - cron:  '0 3 * * 1'
+
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install ANARCI
+      run: |
+        pip install .
+    - name: Test with pytest
+      run: |
+        pip install pytest
+        pytest ./test

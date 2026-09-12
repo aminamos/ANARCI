@@ -28,14 +28,27 @@ ANARCI -i myfile.fasta
 
 # Installation
 
-The easiest way to install ANARCI and its dependencies is using conda
+ANARCI no longer requires HMMER binaries. HMM searches (and HMM building for
+the data pipeline) use [pyhmmer](https://github.com/althonos/pyhmmer), and the
+corrected germline data is bundled with the package, so the following works
+without conda, bash or a platform-specific HMMER build:
 
 ```python
-conda install -c conda-forge biopython -y
-conda install -c bioconda hmmer=3.3.2 -y
-cd ANARCI
+pip install .
+# or, from a checkout:
 python setup.py install
 ```
+
+This installs the `ANARCI` command and the `anarci` Python package.
+
+## IMGT germline data fix (this fork)
+
+The shipped `ALL.hmm`/`germlines.py` were rebuilt with corrected germlines
+(417 rows re-framed, 1 excluded, 215 J rows fixed): rhesus heavy/kappa and rat
+heavy germlines carried spurious gap columns that shifted the conserved IMGT
+anchors (Cys23/Trp41/Cys104) and misnumbered query sequences (GitHub issues
+#17, #24). `build_pipeline/FormatAlignments.py` now refuses to ship misframed
+rows and applies the same curation on a fresh IMGT rip.
 
 # Further info
 

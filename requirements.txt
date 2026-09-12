@@ -1,1 +1,3 @@
-biopython
+pyhmmer
+requests
+beautifulsoup4

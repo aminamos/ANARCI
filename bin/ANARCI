@@ -8,7 +8,7 @@
 #    You should have received a copy of the BSD 3-Clause Licence
 #    along with this program.  If not, see <https://opensource.org/license/bsd-3-clause/>.
 
-description='''
+description=r'''
 
 ANARCI                                                 \\\    //
 Antibody Numbering and Antigen Receptor ClassIfication  \\\  //
@@ -138,18 +138,9 @@ if __name__ == "__main__":
             print("Error: Hit output file path does not exist", file=sys.stderr)
             sys.exit(1)
     
-    # Check that hmmscan can be found in the path
+    # pyhmmer is used by the library; --hmmerpath is kept for backwards compatibility
     if args.hmmerpath:
-        hmmerpath=args.hmmerpath
-        scan_path = os.path.join( hmmerpath, "hmmscan" )
-        if not ( os.path.exists( scan_path ) and os.access(scan_path, os.X_OK)):
-            print("Error: No hmmscan executable file found in directory: %s"%(hmmerpath), file=sys.stderr)
-            sys.exit(1)
-    elif not which("hmmscan"):
-        print("Error: hmmscan was not found in the path. Either install and add to path or provide path with commandline option.", file=sys.stderr)
-        sys.exit(1)
-    
-    
+        print('Note: ANARCI is using pyhmmer, ignoring --hmmerpath argument')
     # Check if there should be some restriction as to which chain types should be numbered.
     # If it is not the imgt scheme they want then restrict to only igs (otherwise you'll hit assertion errors)
     types_to_chains = {"ig":["H","K","L"], "tr":["A", "B","G","D"], "heavy":["H"], "light":["K","L"] }

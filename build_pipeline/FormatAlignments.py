@@ -202,7 +202,7 @@ def format_j_genes(jalignments):
         if (species, chain_type) not in new_jalignments:   
             new_jalignments[(species, chain_type)] = {}
         # We take the last 13 of the new alignment and pad into 20 long string 
-        new_jalignments[(species, chain_type)][ (id1, id2) ] = sequence[START: END][-14:].rjust(20).replace(" ", ".")
+        new_jalignments[(species, chain_type)][ (id1, id2) ] = sequence[START: END][-13:].rjust(20).replace(" ", ".")
     return new_jalignments
 
 def format_v_genes(valignments):
@@ -218,14 +218,24 @@ def format_v_genes(valignments):
             sequence = valignments[entry][seq]
             if chain_type == "L" and translations[species] == "rhesus":
                 sequence = rhesus_lambda(sequence)
+            elif chain_type == "H" and translations[species] == "rhesus":
+                sequence = rhesus_heavy(sequence)
+            elif chain_type == "K" and translations[species] == "rhesus":
+                sequence = rhesus_kappa(sequence)
+            elif chain_type == "H" and translations[species] == "rat":
+                sequence = rat_heavy(sequence)
             elif chain_type == "A" and translations[species] == "mouse":
                 sequence = mouse_alpha(sequence)
             elif chain_type == "D" and translations[species] == "mouse":
                 sequence = mouse_delta(sequence)
             new_valignments[entry][ seq ] = sequence[:108].ljust( 108 ).replace(" ",".")
             if new_valignments[entry][ seq ][103] != "C" or new_valignments[entry][ seq ][22] != "C": 
-                sys.stderr.write("Warning - this alignment doesn't feature CYS at position 23 and/or position 104.\n")
-                sys.stderr.write("%s,%s,%s\n" % (new_valignments[entry][ seq ], entry, seq))
+                # A germline row without Cys at IMGT 23 and 104 is misframed. Shipping it
+                # poisons the HMM and misnumbers query sequences (see GitHub issues #17, #24).
+                # Refuse to build: the row must be re-curated or explicitly excluded above.
+                raise SystemExit(
+                    "Fatal: germline row lacks Cys at IMGT 23 and/or 104.\n"
+                    "%s,%s,%s" % (new_valignments[entry][ seq ], entry, seq))
 
     return new_valignments
 
@@ -241,6 +251,28 @@ def mouse_delta(sequence):
     if sequence[103] != "C" or sequence[22] != "C":
         return sequence[ : 8 ] + sequence[ 9:85 ] + sequence[86:]
     return sequence
+
+def rhesus_heavy(sequence):
+    """
+    Rhesus heavy chains carry two spurious gap columns (IMGT 16 and IMGT 28) in the
+    IMGT-gapped source. Conserved Cys23/104 land at 24/106. Remove and return.
+    """
+    return sequence[:15] + sequence[16:27] + sequence[28:]
+
+def rhesus_kappa(sequence):
+    """
+    Rhesus kappa chains carry a spurious gap column at IMGT 21 in the IMGT-gapped
+    source (see GitHub issue #24). Conserved Cys23/104 land at 24/105.
+    Remove and return.
+    """
+    return sequence[:20] + sequence[21:]
+
+def rat_heavy(sequence):
+    """
+    Rat heavy chains carry two spurious gap columns (IMGT 35 and IMGT 104) in the
+    IMGT-gapped source. Conserved Cys104 lands at 106. Remove and return.
+    """
+    return sequence[:34] + sequence[35:103] + sequence[104:]
 
 def rhesus_lambda(sequence):
     """
